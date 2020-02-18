@@ -10,7 +10,7 @@ import deeplabcut
 with open('settings.json') as json_file:  
     settings = json.load(json_file)
     
-print("Gonna track videos:", settings['pwd_videos'])
+print("Attempting to track videos:", settings['pwd_videos'])
 
 #dest_folder = "/home/hpc_user/projects-dlc/dlc-scripts/results/"
 

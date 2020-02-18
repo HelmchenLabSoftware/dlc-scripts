@@ -8,7 +8,7 @@ import cv2
 from lib.os_lib import getfiles_walk, progress_bar
 from lib.hdf5_wrapper import npStrArr2h5
 
-
+# Parse CSV marking file created by DLC
 def parse_dlc_csv(fname):
     # Read file
     with open(fname, 'r') as f:
@@ -154,3 +154,14 @@ def dlc_csv_merge_write(csv_list, vid_list, outpathname):
     rezfile['Y'] = outdata_Y
     rezfile['P'] = outdata_P
     rezfile.close()
+
+
+# Fix H5 files created by old version of dlc_csv_composite_crawl function
+def dlc_fix_old_h5(fnames_h5):
+    for i, fname_h5 in enumerate(fnames_h5):
+        print(i, '/', len(fnames_h5))
+        with h5py.File(fname_h5, "a") as dlc_h5_file:
+            dlc_h5_file.attrs['VID_PATH'] = np.string_(os.path.dirname(dlc_h5_file['VID_PATHS'][0]))
+            npStrArr2h5(dlc_h5_file, [os.path.basename(vidpathname) for vidpathname in dlc_h5_file['VID_PATHS']], "VID_NAMES")
+            del dlc_h5_file['VID_PATHS']
+            del dlc_h5_file['CSV_PATHS']
