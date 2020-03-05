@@ -88,7 +88,7 @@ def dlc_csv_composite_crawl(rootdir, outdir):
 3. Fill array with data
 4. Save to H5
 '''
-def dlc_csv_merge_write(csv_list, vid_list, outpathname):
+def dlc_csv_merge_write(csvLst, vidLst, outpathname):
     # Check if all elements of a list are the same
     def check_equal(lst, err=""):
         for el in lst[1:]:
@@ -96,37 +96,38 @@ def dlc_csv_merge_write(csv_list, vid_list, outpathname):
                 raise ValueError(err, lst[0], "!=", el)
     
     # Check that the number of videos and CSV files is the same
-    if len(csv_list) != len(vid_list):
-        raise ValueError("There are", len(vid_list), "videos and", len(fpath), " csv files")
+    if len(csvLst) != len(vidLst):
+        print(vidLst, csvLst)
+        raise ValueError("There are", len(vidLst), "videos and", len(csvLst), " csv files")
         
     # Check that the videos and CSV files correspond
-    for csv_name, vid_name in zip(csv_list, vid_list):
+    for csv_name, vid_name in zip(csvLst, vidLst):
         if os.path.basename(vid_name)[:-4] not in csv_name:
             raise ValueError("CSV and VIDEO files do not correspond", csv_name, vid_name)
     
-    N_FILES = len(csv_list)
-    csv_data_list = []
+    N_FILES = len(csvLst)
+    csvDataLst = []
     progress_bar(0, N_FILES, "parsing CSV Files")
-    for i, csv_name in enumerate(csv_list):
-        csv_data_list += [parse_dlc_csv(csv_name)]
+    for i, csv_name in enumerate(csvLst):
+        csvDataLst += [parse_dlc_csv(csv_name)]
         progress_bar(i+1, N_FILES, "parsing CSV Files")
     
-    avi_fps_list = []
+    aviFPSLst = []
     progress_bar(0, N_FILES, "getting FPS info")
-    for i, vid_name in enumerate(vid_list):
-        avi_fps_list += [parse_avi_meta(vid_name)]
+    for i, vid_name in enumerate(vidLst):
+        aviFPSLst += [parse_avi_meta(vid_name)]
         progress_bar(i+1, N_FILES, "getting FPS info")
         
     print("-- computing merged file")
     # Assert that all framerates are the same
     # Assert that all nodeNames match exactly
-    check_equal(avi_fps_list, err="Found non-matching framerates")
-    check_equal([data[0] for data in csv_data_list], err="Found non-matching keys")
+    check_equal(aviFPSLst, err="Found non-matching framerates")
+    check_equal([data[0] for data in csvDataLst], err="Found non-matching keys")
     
     # Determine nNodes, nTrials, and longest nTime
-    nNodes   = len(csv_data_list[0][0])
-    nTrials  = len(csv_data_list)
-    nTimesMax = np.max([data[1].shape[0] for data in csv_data_list])
+    nNodes   = len(csvDataLst[0][0])
+    nTrials  = len(csvDataLst)
+    nTimesMax = np.max([data[1].shape[0] for data in csvDataLst])
 
     # Make output array
     outdata_X = np.full((nTimesMax, nNodes, nTrials), np.nan)
@@ -134,7 +135,7 @@ def dlc_csv_merge_write(csv_list, vid_list, outpathname):
     outdata_P = np.full((nTimesMax, nNodes, nTrials), np.nan)
     
     # Fill output array
-    for i, (nodeNames, X, Y, P) in enumerate(csv_data_list):
+    for i, (nodeNames, X, Y, P) in enumerate(csvDataLst):
         nTimesThis = X.shape[0]
         outdata_X[:nTimesThis, :, i] = X
         outdata_Y[:nTimesThis, :, i] = Y
@@ -144,12 +145,12 @@ def dlc_csv_merge_write(csv_list, vid_list, outpathname):
     print("-- writing merged data of", nTrials, "videos to", outpathname)
     rezfile = h5py.File(outpathname, "w")
     
-    vidNames = [os.path.basename(vidpathname) for vidpathname in vid_list]
-    rezfile.attrs['VID_PATH'] = np.string_(os.path.dirname(vidNames[0]))
-    npStrArr2h5(rezfile, csv_data_list[0][0], 'NODE_NAMES')
+    vidNames = [os.path.basename(vidpathname) for vidpathname in vidLst]
+    rezfile.attrs['VID_PATH'] = np.string_(os.path.dirname(vidLst[0]))
+    npStrArr2h5(rezfile, csvDataLst[0][0], 'NODE_NAMES')
     npStrArr2h5(rezfile, vidNames, 'VID_NAMES')
-    #npStrArr2h5(rezfile, csv_list, 'CSV_PATHS')
-    rezfile['FPS'] = avi_fps_list[0]
+    #npStrArr2h5(rezfile, csvLst, 'CSV_PATHS')
+    rezfile['FPS'] = aviFPSLst[0]
     rezfile['X'] = outdata_X
     rezfile['Y'] = outdata_Y
     rezfile['P'] = outdata_P

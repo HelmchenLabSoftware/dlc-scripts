@@ -122,3 +122,22 @@ def merge_images_cv2(srcPaths, trgPathName, fps=30, FOURCC='MJPG', isColor=False
     print("\n Done")
 
     out.release()
+
+
+def save_frames_cv2(vidPath, outpath, frameIdxs, prefix='img'):
+
+    def _add_leading_zeros(num, nDigit):
+        s = str(num)
+        l = len(s)
+        if l < nDigit:
+            s = "0"*(nDigit - l) + s
+        return s
+
+    capture = cv2.VideoCapture(vidPath)
+
+    for idx in frameIdxs:
+        capture.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        ret, frame = capture.read()
+
+        outname = os.path.join(outpath, prefix + _add_leading_zeros(idx, 4) + '.png')
+        cv2.imwrite(outname, frame)
