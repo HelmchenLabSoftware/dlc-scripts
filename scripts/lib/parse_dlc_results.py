@@ -49,7 +49,7 @@ def parse_avi_meta(vidname):
 1. Crawl from root, find all directories containing ['DeepCut_resnet50', '.csv']
 2. For each directory, compress all files into one sub file with same name as directory
 '''
-def dlc_csv_composite_crawl(rootdir, outdir):
+def dlc_csv_composite_crawl(rootdir, outdir, extrakeys=[]):
     
     # Construct dictionary of files indexed by the containing folder name
     # Files must appear in alphabetical order
@@ -60,7 +60,7 @@ def dlc_csv_composite_crawl(rootdir, outdir):
         return {k : np.sort(v) for k,v in path_dict.items()}
     
     print("Finding paths to CSV and AVI files")
-    walkpaths_csv = getfiles_walk(rootdir, ['DeepCut_resnet50', '.csv'])
+    walkpaths_csv = getfiles_walk(rootdir, ['DeepCut_resnet50', '.csv'] + extrakeys)
     walkpaths_avi = getfiles_walk(rootdir, ['.avi'])
     
     path_dict_csv = paths2dict(walkpaths_csv)
