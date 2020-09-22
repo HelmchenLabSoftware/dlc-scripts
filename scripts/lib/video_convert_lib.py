@@ -20,6 +20,27 @@ def get_info_cv2(inPathName):
     }
 
 
+def append_ext(pathName, ext):
+    oldExt = os.path.splitext(pathName)[1]
+    if oldExt == ext:
+        return pathName
+    elif oldExt == "":
+        return pathName + '.' + ext
+    else:
+        raise ValueError('Attempting to set old extension', oldExt, 'to', ext)
+
+
+def img_matplotlib_2_cv(img3D, isColor=False):
+    # Make sure image is UINT8 and spans values [0, 255]
+    img = np.uint8(img3D) if np.max(img3D) > 1 else np.uint8(255 * img3D)
+
+    # Select correct color ordering, or only one color if grayscale
+    colorReorder = np.array([2, 1, 0])  # OpenCV and Matplotlib seem to disagree about color order in RGB
+    img = img[:, :, colorReorder] if isColor else img[:, :, 0]
+
+    return img
+
+
 # Convert video from LOSSLESS AVI to MJPG or XVID
 def convert_cv2(inPathName, outPathName, FOURCC='MJPG', crop=None, isColor=False):
     if FOURCC not in ['MJPG', 'XVID']:
@@ -40,7 +61,8 @@ def convert_cv2(inPathName, outPathName, FOURCC='MJPG', crop=None, isColor=False
     # Writer
     frameShape = (width, height)
     fourcc = cv2.VideoWriter_fourcc(*FOURCC)
-    out = cv2.VideoWriter(outPathName, fourcc, fps, frameShape, isColor=isColor)
+    outPathNameEff = append_ext(outPathName, 'avi')
+    out = cv2.VideoWriter(outPathNameEff, fourcc, fps, frameShape, isColor=isColor)
 
     print("Converting file", inPathName, "to", outPathName)
     print("total frames", nFrame, "shape", frameShape, "fps", fps)
@@ -65,8 +87,10 @@ def convert_cv2(inPathName, outPathName, FOURCC='MJPG', crop=None, isColor=False
     
 
 # Convert video from any AVI to any other
-def convert_ffmpeg_h265(src_name, trg_name, lossless=False, crf=22, gray=False, crop=None):    
-    task = ["ffmpeg","-i", src_name]
+def convert_ffmpeg_h265(srcName, trgName, lossless=False, crf=22, gray=False, crop=None):
+    trgNameEff = append_ext(trgName, 'mp4')
+
+    task = ["ffmpeg","-i", srcName]
     
     # Determine color
     if gray:
@@ -89,7 +113,7 @@ def convert_ffmpeg_h265(src_name, trg_name, lossless=False, crf=22, gray=False, 
         task += ["-preset", "slow", "-x265-params", "crf=22"]
         
     # Target must appear at the end of the task
-    task += [trg_name]
+    task += [trgNameEff]
     
     # Run
     subprocess.run(task)
@@ -107,17 +131,18 @@ def merge_images_cv2(srcPaths, trgPathName, fps=30, FOURCC='MJPG', isColor=False
 
     # Convert between standards of different libraries
     shape2Dcv = (img.shape[1], img.shape[0])   # OpenCV uses column-major or sth
-    colorReorder = np.array([2, 1, 0])         # OpenCV and Matplotlib seem to disagree about color order in RGB
 
     # Initialize writer
     fourcc = cv2.VideoWriter_fourcc(*FOURCC)
-    out = cv2.VideoWriter(trgPathName, fourcc, fps, shape2Dcv, isColor=isColor)
+    outPathNameEff = append_ext(trgPathName, 'avi')
+    out = cv2.VideoWriter(outPathNameEff, fourcc, fps, shape2Dcv, isColor=isColor)
 
     for iSrc, srcPath in enumerate(srcPaths):
         print('Processing image[%d]\r' % iSrc, end="")
-        img = np.uint8(255*mpimg.imread(srcPath))
-        img = img[:, :, colorReorder] if isColor else img[:,:,0]
-        out.write(img)
+        imgSrc = mpimg.imread(srcPath)
+        imgSrc = img_matplotlib_2_cv(imgSrc, isColor=isColor)
+
+        out.write(imgSrc)
 
     print("\n Done")
 
