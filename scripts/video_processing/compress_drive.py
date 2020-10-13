@@ -15,9 +15,18 @@
 import os, sys, subprocess
 import argparse
 
-# Append base directory
-projectPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(projectPath)
+# # Append base directory
+# projectPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(projectPath)
+
+# Export library path
+rootname = "dlc-scripts"
+thispath = os.path.dirname(os.path.abspath(__file__))
+rootpath = os.path.join(thispath[:thispath.index(rootname)], rootname)
+scriptspath = os.path.join(rootpath, "scripts")
+print("Appending project path", scriptspath)
+sys.path.append(scriptspath)
+
 
 # local libraries
 from lib.qt_wrapper import gui_fname, gui_fsave, gui_fpath
