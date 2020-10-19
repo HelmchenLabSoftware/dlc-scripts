@@ -160,9 +160,14 @@ def dlc_csv_merge_write(csvLst, vidLst, outpathname):
 # Fix H5 files created by old version of dlc_csv_composite_crawl function
 def dlc_fix_old_h5(fnames_h5):
     for i, fname_h5 in enumerate(fnames_h5):
-        print(i, '/', len(fnames_h5))
+        print(i, '/', len(fnames_h5), end='')
         with h5py.File(fname_h5, "a") as dlc_h5_file:
-            dlc_h5_file.attrs['VID_PATH'] = np.string_(os.path.dirname(dlc_h5_file['VID_PATHS'][0]))
-            npStrArr2h5(dlc_h5_file, [os.path.basename(vidpathname) for vidpathname in dlc_h5_file['VID_PATHS']], "VID_NAMES")
-            del dlc_h5_file['VID_PATHS']
-            del dlc_h5_file['CSV_PATHS']
+            if 'VID_PATH' in dlc_h5_file.attrs.keys():
+                print("- already converted, skip")
+            else:
+                dlc_h5_file.attrs['VID_PATH'] = np.string_(os.path.dirname(dlc_h5_file['VID_PATHS'][0]))
+                npStrArr2h5(dlc_h5_file, [os.path.basename(vidpathname) for vidpathname in dlc_h5_file['VID_PATHS']], "VID_NAMES")
+                del dlc_h5_file['VID_PATHS']
+                del dlc_h5_file['CSV_PATHS']
+
+                print("- done converting")

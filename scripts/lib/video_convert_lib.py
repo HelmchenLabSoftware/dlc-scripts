@@ -25,7 +25,7 @@ def append_ext(pathName, ext):
     if oldExt == ext:
         return pathName
     elif oldExt == "":
-        return pathName + '.' + ext
+        return pathName + ext
     else:
         raise ValueError('Attempting to set old extension', oldExt, 'to', ext)
 
@@ -61,7 +61,7 @@ def convert_cv2(inPathName, outPathName, FOURCC='MJPG', crop=None, isColor=False
     # Writer
     frameShape = (width, height)
     fourcc = cv2.VideoWriter_fourcc(*FOURCC)
-    outPathNameEff = append_ext(outPathName, 'avi')
+    outPathNameEff = append_ext(outPathName, '.avi')
     out = cv2.VideoWriter(outPathNameEff, fourcc, fps, frameShape, isColor=isColor)
 
     print("Converting file", inPathName, "to", outPathName)
@@ -88,7 +88,7 @@ def convert_cv2(inPathName, outPathName, FOURCC='MJPG', crop=None, isColor=False
 
 # Convert video from any AVI to any other
 def convert_ffmpeg_h265(srcName, trgName, lossless=False, crf=22, gray=False, crop=None):
-    trgNameEff = append_ext(trgName, 'mp4')
+    trgNameEff = append_ext(trgName, '.mp4')
 
     task = ["ffmpeg","-i", srcName]
     
@@ -110,7 +110,7 @@ def convert_ffmpeg_h265(srcName, trgName, lossless=False, crf=22, gray=False, cr
     if lossless:
         task += ["-x265-params", "lossless=1"]
     else:
-        task += ["-preset", "slow", "-x265-params", "crf=22"]
+        task += ["-preset", "slow", "-x265-params", "crf="+str(crf)]
         
     # Target must appear at the end of the task
     task += [trgNameEff]
@@ -134,7 +134,7 @@ def merge_images_cv2(srcPaths, trgPathName, fps=30, FOURCC='MJPG', isColor=False
 
     # Initialize writer
     fourcc = cv2.VideoWriter_fourcc(*FOURCC)
-    outPathNameEff = append_ext(trgPathName, 'avi')
+    outPathNameEff = append_ext(trgPathName, '.avi')
     out = cv2.VideoWriter(outPathNameEff, fourcc, fps, shape2Dcv, isColor=isColor)
 
     for iSrc, srcPath in enumerate(srcPaths):

@@ -20,7 +20,7 @@ TODO-EXTENSIONS:
     [ ] Include virtual joint, ask Pia
   [ ] Consider removing velocity as a test - it does not appear to offer anything more than length already offers
     [+] If keep velocity - fix bug where it always marks one more point than is actually necessary
-    [ ] Still some bug - most likely fuck it
+    [ ] Still some bug - not worth effort
   [ ] Ultimate statistics - plot ratio of (bad length frames / all kept frames) as function of cutoff threshold. Thus optimize threshold
   
   [ ] Optionally - enable original video overlay
@@ -31,16 +31,19 @@ import os
 import numpy as np
 import cv2
 
+from lib.video_convert_lib import convert_ffmpeg_h265
+from lib.color_lib import rainbow
+
 
 def stickman(X, Y, param, constr_dict):
 
     ############################################
     # Extract video properties from original
     ############################################
-    if not os.path.isfile(param["AVI_FNAME"]):
-        raise IOError("The video file does not exist", param["AVI_FNAME"])
+    if not os.path.isfile(param["SOURCE_PATH_NAME"]):
+        raise IOError("The video file does not exist", param["SOURCE_PATH_NAME"])
         
-    capture = cv2.VideoCapture(param["AVI_FNAME"])
+    capture = cv2.VideoCapture(param["SOURCE_PATH_NAME"])
     fps = cv2.CAP_PROP_FPS
     frameShape = (
         int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), 
@@ -49,20 +52,27 @@ def stickman(X, Y, param, constr_dict):
     ############################################
     # Define Constants
     ############################################
-    
-    COLOR_RED = (255, 0, 0)
-    COLOR_GREEN = (0, 255, 0)
-    COLOR_BLUE = (0, 0, 255)
-  
+
     FRAME_X_LIM = param["STICKMAN_CROP_X"] if "STICKMAN_CROP_X" in param.keys() else [0, frameShape[0]]
     FRAME_Y_LIM = param["STICKMAN_CROP_Y"] if "STICKMAN_CROP_Y" in param.keys() else [0, frameShape[1]]
 
     pointLocalCoord = lambda iFrame, iNode: (
         int(X[iFrame, iNode] - FRAME_X_LIM[0]),
         int(Y[iFrame, iNode] - FRAME_Y_LIM[0]))
-    
+
     nRows, nNodes = X.shape
 
+    CIRCLE_THICKNESS = -1  # Filled circle
+    CIRCLE_RADIUS = 3
+    EDGE_THICKNESS = 2
+
+    COLOR_RED = (255, 0, 0)
+    COLOR_GREEN = (0, 255, 0)
+    COLOR_BLUE = (0, 0, 255)
+
+    nodeColors = (rainbow(nNodes) * 255).astype(np.uint8)
+    nodeColors = nodeColors[:, (0,2,1)]  # CV strange color order
+    nodeColors = [tuple([int(c[0]), int(c[1]), int(c[2])]) for c in nodeColors]  # OpenCV is a princess wrt data types
     
     ############################################
     # Check constraints
@@ -88,9 +98,9 @@ def stickman(X, Y, param, constr_dict):
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    
-    
-    outName = os.path.join(param["REZ_FPATH"], os.path.basename(param["AVI_FNAME"])[:-4] + "-stickman.avi")
+
+    basename = os.path.splitext(os.path.basename(param["SOURCE_PATH_NAME"]))[0]
+    outName = os.path.join(param["REZ_FPATH"], basename + "-stickman.avi")
     outWriter = cv2.VideoWriter(outName, fourcc, fps, frameShape, isColor=True)
 
     for iFrame in range(nRows):
@@ -103,18 +113,6 @@ def stickman(X, Y, param, constr_dict):
             pic = np.zeros((frameShape[1], frameShape[0], 3), dtype=np.uint8)
         
         
-        
-
-        # ------------Draw Nodes----------------
-        # If Node has high confidence, draw it
-        # Change color if node has bad velocity
-        for iNode in range(nNodes):
-            if not nodeLowConf[iFrame, iNode]:
-                p1 = pointLocalCoord(iFrame, iNode)
-                badNode = haveNodeConstr and nodeLowConstr[iFrame, iNode]
-                color = COLOR_RED if badNode else COLOR_BLUE
-                pic = cv2.circle(pic, p1, 10, COLOR_RED, 2)
-
         # ------------Draw Edges----------------
         # If Edge has high confidence, draw it
         # Change color if edge has bad length
@@ -128,7 +126,24 @@ def stickman(X, Y, param, constr_dict):
                     p2 = pointLocalCoord(iFrame, p2idx)
                     badEdge = haveEdgeConstr and edgeLowConstr[iFrame, iEdge]
                     color = COLOR_RED if badEdge else COLOR_GREEN
-                    pic = cv2.line(pic, p1, p2, COLOR_GREEN, 2)
+                    pic = cv2.line(pic, p1, p2, color, EDGE_THICKNESS)
+
+        # ------------Draw Nodes----------------
+        # If Node has high confidence, draw it
+        # Change color if node has bad velocity
+        for iNode in range(nNodes):
+            if not nodeLowConf[iFrame, iNode]:
+                p1 = pointLocalCoord(iFrame, iNode)
+                badNode = haveNodeConstr and nodeLowConstr[iFrame, iNode]
+                # color = COLOR_RED if badNode else COLOR_BLUE
+                # pic = cv2.circle(pic, p1, CIRCLE_RADIUS, color, CIRCLE_THICKNESS)
+
+                if not badNode:
+                    pic = cv2.circle(pic, p1, CIRCLE_RADIUS, nodeColors[iNode], CIRCLE_THICKNESS)
+                else:
+                    p1neg = p1[0] - CIRCLE_RADIUS, p1[1] - CIRCLE_RADIUS
+                    p1pos = p1[0] + CIRCLE_RADIUS, p1[1] + CIRCLE_RADIUS
+                    pic = cv2.rectangle(pic, p1neg, p1pos, nodeColors[iNode], CIRCLE_THICKNESS)
 
         outWriter.write(pic)#frame.transpose())  # OPENCV is col-major :(
 
@@ -143,4 +158,10 @@ def stickman(X, Y, param, constr_dict):
     outWriter.release()
     cv2.destroyAllWindows()
 
-    print("\nDone!")
+    print("\nDone writing!")
+
+    print("Compressing to MP4")
+    outNameMP4 = os.path.splitext(outName)[0] + ".mp4"
+    convert_ffmpeg_h265(outName, outNameMP4)
+    print("Deleting uncompressed")
+    os.remove(outName)
