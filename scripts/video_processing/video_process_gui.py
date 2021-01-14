@@ -2,6 +2,8 @@
 # Import system libraries
 ###############################
 import os, sys, locale
+import pandas as pd
+from collections import defaultdict
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 ###############################
@@ -27,6 +29,7 @@ os.system(qtCompilePrefStr)
 import numpy as np
 from video_processing.video_process_gui_files.ffmpeg_wrapper import Ui_FFMPEG_WRAPPER
 from lib.os_lib import getfiles_walk, sizeToString
+from lib.qt_gui import qtable_load_from_pandas
 import lib.video_convert_lib as video_lib
 
 
@@ -71,7 +74,7 @@ class CompressGUI():
 
         # Get all files and their sizes
         fileswalk = getfiles_walk(rootCrawlDir)
-        filesByExt = {}
+        filesByExt = defaultdict(lambda: [])
 
         self.gui.infoCrawlProgressBar.setEnabled(True)
         self.gui.infoCrawlProgressBar.setMaximum(len(fileswalk))
@@ -83,9 +86,6 @@ class CompressGUI():
             isVideo = thisExt in ['.avi', '.mp4']
             fname = os.path.join(path, name)
             fsize = os.path.getsize(fname)
-
-            if thisExt not in filesByExt.keys():
-                filesByExt[thisExt] = []
 
             rezThis = [fsize]
 
@@ -100,19 +100,15 @@ class CompressGUI():
         # Summarize statistics by extension
         statByExt = []
         for ext, data in filesByExt.items():
-            totalFileSizes = sizeToString(np.sum(d[0] for d in data))
+            #totalFileSizes = sizeToString(np.sum(d[0] for d in data))
+            totalFileSizes = np.sum(d[0] for d in data)
             stat = [ext, len(data), totalFileSizes]
             for iData in range(1, len(data[0])):
                 stat += [list(set([d[iData] for d in data]))]
             statByExt += [stat]
 
-        print("Filling up table")
-        #write results to table
-        self.gui.infoCrawlTableWidget.setRowCount(0)
-        for iRow, extStat in enumerate(statByExt):
-            self.gui.infoCrawlTableWidget.insertRow(iRow)
-            for iCol, stat in enumerate(extStat):
-                self.gui.infoCrawlTableWidget.setItem(iRow, iCol, QtWidgets.QTableWidgetItem(str(stat)))
+        df = pd.DataFrame(statByExt, columns=['Extension', 'Number of Files', 'Total Size', 'Shape', 'nFrames', 'FPS', 'codec'])
+        qtable_load_from_pandas(self.gui.infoCrawlTableWidget, df)
 
         # self.gui.infoCrawlTableWidget.resizeColumnsToContents()
 

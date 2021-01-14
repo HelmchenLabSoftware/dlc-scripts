@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/media/aleksejs/DataHDD/work/codes/comp-neuro/analysis-tracking/dlc-scripts/scripts/video_processing/video_process_gui_files/ffmpeg_wrapper.ui'
+# Form implementation generated from reading ui file '/home/alyosha/work/git/dlc-scripts/scripts/video_processing/video_process_gui_files/ffmpeg_wrapper.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -32,7 +32,6 @@ class Ui_FFMPEG_WRAPPER(object):
         self.verticalLayout_2.setSpacing(6)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_4.setContentsMargins(11, 11, 11, 11)
         self.horizontalLayout_4.setSpacing(6)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.infoCrawlGetRootButton = QtWidgets.QPushButton(self.infoCrawlTab)
@@ -78,7 +77,6 @@ class Ui_FFMPEG_WRAPPER(object):
         self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_3.setContentsMargins(11, 11, 11, 11)
         self.verticalLayout_3.setSpacing(6)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.mainModeComboBox = QtWidgets.QComboBox(self.vidoeCompressTab)
@@ -108,7 +106,6 @@ class Ui_FFMPEG_WRAPPER(object):
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setContentsMargins(11, 11, 11, 11)
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.mainQuality1Label = QtWidgets.QLabel(self.frame)
@@ -132,7 +129,6 @@ class Ui_FFMPEG_WRAPPER(object):
         self.verticalLayout_3.addItem(spacerItem)
         self.horizontalLayout_3.addLayout(self.verticalLayout_3)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_4.setContentsMargins(11, 11, 11, 11)
         self.verticalLayout_4.setSpacing(6)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.mainSourceButton = QtWidgets.QPushButton(self.vidoeCompressTab)
