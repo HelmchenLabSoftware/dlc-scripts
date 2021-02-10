@@ -92,6 +92,9 @@ class CompressGUI():
             if isVideo:
                 vidInfos = video_lib.get_info_cv2(fname)
                 rezThis += [vidInfos['shape'], vidInfos['nFrame'], vidInfos['fps'], vidInfos['fourcc']]
+            else:
+                rezThis += [None, None, None, None]
+
 
             filesByExt[thisExt] += [rezThis]
         self.gui.infoCrawlProgressBar.setEnabled(False)
@@ -104,11 +107,17 @@ class CompressGUI():
             totalFileSizes = np.sum(d[0] for d in data)
             stat = [ext, len(data), totalFileSizes]
             for iData in range(1, len(data[0])):
-                stat += [list(set([d[iData] for d in data]))]
+                valLst = list(set([d[iData] for d in data]))
+                if len(valLst) == 1:
+                    stat += [valLst[0]]
+                else:
+                    stat += valLst
             statByExt += [stat]
 
+        print(statByExt)
+
         df = pd.DataFrame(statByExt, columns=['Extension', 'Number of Files', 'Total Size', 'Shape', 'nFrames', 'FPS', 'codec'])
-        qtable_load_from_pandas(self.gui.infoCrawlTableWidget, df)
+        qtable_load_from_pandas(self.gui.infoCrawlTableWidget, df, dropNone=True)
 
         # self.gui.infoCrawlTableWidget.resizeColumnsToContents()
 
@@ -151,10 +160,8 @@ class CompressGUI():
 
         if state["MainMode"] == "Single Video":
             aaa = QtWidgets.QFileDialog.getSaveFileName(self, "Choose name for resulting video", "./", filter=filterThis)
-            print(aaa)
         elif state["MainMode"] == "Folder Crawler":
             aaa = QtWidgets.QFileDialog.getExistingDirectory(self, "Select directory where results will be saved", "./")
-            print(aaa)
         else:
             raise ValueError("Unexpected operation mode", state["MainMode"])
 

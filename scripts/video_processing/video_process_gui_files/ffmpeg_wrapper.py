@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/alyosha/work/git/dlc-scripts/scripts/video_processing/video_process_gui_files/ffmpeg_wrapper.ui'
+# Form implementation generated from reading ui file '/home/alyosha/work/dlc-scripts/scripts/video_processing/video_process_gui_files/ffmpeg_wrapper.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_FFMPEG_WRAPPER(object):
     def setupUi(self, FFMPEG_WRAPPER):
@@ -194,4 +196,3 @@ class Ui_FFMPEG_WRAPPER(object):
         self.mainTargetButton.setText(_translate("FFMPEG_WRAPPER", "Select Target"))
         self.mainConvertButton.setText(_translate("FFMPEG_WRAPPER", "Convert"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.vidoeCompressTab), _translate("FFMPEG_WRAPPER", "operations"))
-

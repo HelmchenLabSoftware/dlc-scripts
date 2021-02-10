@@ -3,7 +3,7 @@ import numbers
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 
-def qtable_load_from_pandas(qtable, df, append=False):
+def qtable_load_from_pandas(qtable, df, append=False, dropNone=False):
     if not append:
         # self.gui.collectionCardsTable.clear()
         qtable.setRowCount(0)
@@ -20,6 +20,8 @@ def qtable_load_from_pandas(qtable, df, append=False):
             if isinstance(cell, numbers.Number):
                 item = QtWidgets.QTableWidgetItem()
                 item.setData(QtCore.Qt.DisplayRole, cell)
+            elif (cell is None) and dropNone:
+                item = QtWidgets.QTableWidgetItem('')
             else:
                 item = QtWidgets.QTableWidgetItem(str(cell))
             qtable.setItem(rowIdxQtable, iCol, item)
