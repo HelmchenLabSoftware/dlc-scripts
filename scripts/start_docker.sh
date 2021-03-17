@@ -12,7 +12,10 @@ docker exec --user $USER -it hpc_docker /bin/bash
 # docker exec --user $USER -it hpc_docker /bin/bash
 # sudo apt update                                # inside container to fix cv2 issue
 # sudo apt install ffmpeg libsm6 libxext6 -y     # inside container to fix cv2 issue
-
+# 
+# cd /usr/local/lib/python3.6/dist-packages/deeplabcut/pose_estimation_tensorflow/models/pretrained/
+# sudo download.sh
+# sudo chown hpc_user:hpc_user resnet_v1_50.ckpt      # resolve issue with permission denied for pretrained model
 
 ###
 ### Old script for nvidia-docker to create and start docker
