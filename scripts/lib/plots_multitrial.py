@@ -127,18 +127,34 @@ class SessionPostprocess:
 
         raise IOError('No files for base have been found: ', fpathname)
 
-    def write_stickman(self, trialIdx, showSummary=True):
+    def write_stickman(self, trialIdx, showSummary=True, nodeIdxs=None):
         with h5py.File(self.fnameH5, "r") as h5file:
             filename = h5file['VID_NAMES'][trialIdx]
-            x = np.copy(h5file['X'][:self.nTimesPerTrial[trialIdx], :, trialIdx])
-            y = np.copy(h5file['Y'][:self.nTimesPerTrial[trialIdx], :, trialIdx])
-            p = np.copy(h5file['P'][:self.nTimesPerTrial[trialIdx], :, trialIdx])
+            templateParam = self.templateParam.copy()
+            if nodeIdxs is None:
+                x = np.copy(h5file['X'][:self.nTimesPerTrial[trialIdx], :, trialIdx])
+                y = np.copy(h5file['Y'][:self.nTimesPerTrial[trialIdx], :, trialIdx])
+                p = np.copy(h5file['P'][:self.nTimesPerTrial[trialIdx], :, trialIdx])
+            else:
+                # Select data only for specific nodes
+                x = np.copy(h5file['X'][:self.nTimesPerTrial[trialIdx], nodeIdxs, trialIdx])
+                y = np.copy(h5file['Y'][:self.nTimesPerTrial[trialIdx], nodeIdxs, trialIdx])
+                p = np.copy(h5file['P'][:self.nTimesPerTrial[trialIdx], nodeIdxs, trialIdx])
 
-        constr_dict = compute_constraints(x, y, p, self.templateParam)
+                # Adjust template
+                if 'EDGE_NODES' in self.templateParam:
+                    raise ValueError('Node selection not implemented for the case where edges are present')
+
+                templateParam["NODE_NAMES"] = list(np.array(templateParam["NODE_NAMES"])[nodeIdxs])
+
+                if 'NODE_MAX_V' in self.templateParam:
+                    templateParam["NODE_MAX_V"] = list(np.array(templateParam["NODE_MAX_V"])[nodeIdxs])
+
+        constr_dict = compute_constraints(x, y, p, templateParam)
         if showSummary:
             display(constr_dict["summary"])
 
-        paramThisTrial = copy.deepcopy(self.templateParam)
+        paramThisTrial = copy.deepcopy(templateParam)
         vidPathName = os.path.join(self.fpathVideo, filename)
 
         paramThisTrial['SOURCE_PATH_NAME'] = self._test_vid_exists(vidPathName, ['.avi', '.mp4'])

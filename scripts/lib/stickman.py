@@ -63,7 +63,7 @@ def stickman(X, Y, param, constr_dict):
     nRows, nNodes = X.shape
 
     CIRCLE_THICKNESS = -1  # Filled circle
-    CIRCLE_RADIUS = 3
+    CIRCLE_RADIUS = 5
     EDGE_THICKNESS = 2
 
     COLOR_RED = (255, 0, 0)
